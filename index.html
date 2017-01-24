@@ -1,0 +1,407 @@
+<!doctype html>
+<!--
+  Copyright 2016 Google Inc. All rights reserved.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+      https://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Demonstrates the use of Google Cloud Database with a Firebase DB">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ParkUp- Find out which spot to park in</title>
+
+  <!-- Disable tap highlight on IE -->
+  <meta name="msapplication-tap-highlight" content="no">
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Firebase Database Quickstart">
+  <meta name="theme-color" content="#303F9F">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Firebase Database Quickstart">
+  <meta name="apple-mobile-web-app-status-bar-style" content="#303F9F">
+
+  <!-- Tile icon for Win8 -->
+  <meta name="msapplication-TileColor" content="#3372DF">
+  <meta name="msapplication-navbutton-color" content="#303F9F">
+
+  <!-- Material Design Lite -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.blue_grey-orange.min.css">
+  <script src="https://code.getmdl.io/1.1.3/material.min.js"></script>
+  <script src="bower_components/later/later.min.js" type="text/javascript"></script>
+
+
+  <link rel="stylesheet" href="main.css">
+
+  <!-- Firebase -->
+
+
+<script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyAs52u4guT9exwKUjX90es_8IYifHnJNkU",
+    authDomain: "parkup-b666f.firebaseapp.com",
+    databaseURL: "https://parkup-b666f.firebaseio.com",
+    storageBucket: "parkup-b666f.appspot.com",
+    messagingSenderId: "1029399557559"
+  };
+  firebase.initializeApp(config);
+</script>
+
+
+</head>
+<body>
+<div class="demo-layout mdl-layout mdl-js-layout mdl-layout--fixed-header">
+
+
+  <!-- Splash screen -->
+  <section id="page-splash">
+    <h3 class="logo">ParkUp-Find out which spot to park in</h3>
+    <div>
+      <button id="sign-in-button" class="mdl-button--raised mdl-button mdl-js-button mdl-js-ripple-effect"><i class="material-icons">account_circle</i> Sign in with Google</button>
+    </div>
+  </section>
+
+
+
+  
+  <!-- Header section containing logo and menu -->
+  <header class="header mdl-layout__header mdl-color-text--white mdl-color--light-blue-700">
+
+    <div class="mdl-layout__header-row titlebar">
+      <h3 class="logo">BootUp World-Find out which spot to park in</h3>
+      <button id="sign-out-button" class="mdl-button--raised mdl-button mdl-js-button mdl-js-ripple-effect"><i class="material-icons">account_circle</i> Sign out</button>
+    </div>
+
+    <!-- Navigation Bar-->
+    <div class="tab mdl-layout__header-row mdl-color--light-blue-600">
+
+      <div class="mdl-tab">
+      <!--   <div id="menu-recent" class="mdl-layout__tab is-active mdl-button mdl-js-button mdl-js-ripple-effect">  -->
+<div id="menu-recent" class="mdl-layout__tab mdl-button mdl-js-button mdl-js-ripple-effect">
+          <i class="material-icons">home</i> My spot
+        </div>
+
+        <div id="menu-my-posts" class="mdl-layout__tab mdl-button mdl-js-button mdl-js-ripple-effect">
+          <i class="material-icons">new_releases</i>Blocked in
+        </div>
+
+	<!--
+        <div id="menu-my-spots" class="mdl-layout__tab mdl-button mdl-js-button mdl-js-ripple-effect">
+          <i class="material-icons">home</i> Parking spots
+        </div>
+	-->
+
+        <div id="menu-my-top-posts" class="mdl-layout__tab mdl-button mdl-js-button mdl-js-ripple-effect">
+          <i class="material-icons">trending_up</i>About
+        </div>
+
+	<!--
+        <button class="mdl-button mdl-js-button mdl-button--fab mdl-color--amber-400 mdl-shadow--4dp mdl-js-ripple-effect" id="add">
+          <i class="material-icons">mode_edit</i>
+        </button>
+	-->
+      </div>
+    </div>
+  </header>
+
+  <main class="mdl-layout__content mdl-color--grey-100">
+
+    <!-- Show the form to receive the spot to park in --> 
+    <section class="mdl-grid content" id="add-post" style="display:none">
+      <div class="mdl-cell mdl-cell--12-col mdl-grid">
+
+          <!-- Card containing the inputs to add a new messages -->
+          <div class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet
+                  mdl-cell--6-col-desktop">
+            <div class="mdl-card__title mdl-color--light-blue-600 mdl-color-text--white">
+              <h2 class="mdl-card__title-text">When do you plan to leave?</h2>
+            </div>
+            <div class="mdl-card__supporting-text mdl-color-text--grey-600">
+              <form id="message-form" action="#">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <label for="new-post-title">I plan to leave at</label>
+		  <select id="new-post-title" name="new-post-title" value="17">
+		    <option selected disabled>Choose time</option>
+		    <option value="1">1:00 am</option>
+		    <option value="2">2:00 am</option>
+		    <option value="3">3:00 am</option>
+		    <option value="4">4:00 am</option>
+		    <option value="5">5:00 am</option>
+		    <option value="6">6:00 am</option>
+		    <option value="7">7:00 am</option>
+		    <option value="8">8:00 am</option>
+		    <option value="9">9:00 am</option>
+		    <option value="10">10:00 am</option>
+		    <option value="11">11:00 am</option>
+		    <option value="12">12:00 pm</option>
+		    <option value="13">1:00 pm</option>
+		    <option value="14">2:00 pm</option>
+		    <option value="15">3:00 pm</option>
+		    <option value="16">4:00 pm</option>
+		    <option value="17" selected="selected">5:00 pm</option>
+		    <option value="18">6:00 pm</option>
+		    <option value="19">7:00 pm</option>
+		    <option value="20">8:00 pm</option>
+		    <option value="21">9:00 pm</option>
+		    <option value="22">10:00 pm</option>
+		    <option value="23">11:00 pm</option>
+		    <option value="24">12:00 am</option>
+		  </select>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <textarea class="mdl-textfield__input" rows="3" id="new-post-message"></textarea>
+                  <label class="mdl-textfield__label" for="new-post-message">Optional comment</label>
+                </div>
+                <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+                  Assign me my spot
+                </button>
+              </form>
+            </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Show the form to modify the spot that you parked in --> 
+    <section class="mdl-grid content" id="update-post" style="display:none">
+      <div class="mdl-cell mdl-cell--12-col mdl-grid">
+
+          <!-- Card containing the inputs to add a new messages -->
+          <div class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet
+                  mdl-cell--6-col-desktop">
+            <div class="mdl-card__title mdl-color--light-blue-600 mdl-color-text--white">
+              <h2 class="mdl-card__title-text">Please update your planned departure time</h2>
+            </div>
+            <div class="mdl-card__supporting-text mdl-color-text--grey-600">
+              <form id="update-form" action="#">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+
+		  <label for="update-post-title">Please update my departure time to</label>
+		  <select id="update-post-title" name="update-post-title">
+		    <option selected disabled>Choose time</option>
+		    <option value="1">1:00 am</option>
+		    <option value="2">2:00 am</option>
+		    <option value="3">3:00 am</option>
+		    <option value="4">4:00 am</option>
+		    <option value="5">5:00 am</option>
+		    <option value="6">6:00 am</option>
+		    <option value="7">7:00 am</option>
+		    <option value="8">8:00 am</option>
+		    <option value="9">9:00 am</option>
+		    <option value="10">10:00 am</option>
+		    <option value="11">11:00 am</option>
+		    <option value="12">12:00 pm</option>
+		    <option value="13">1:00 pm</option>
+		    <option value="14">2:00 pm</option>
+		    <option value="15">3:00 pm</option>
+		    <option value="16">4:00 pm</option>
+		    <option value="17">5:00 pm</option>
+		    <option value="18">6:00 pm</option>
+		    <option value="19">7:00 pm</option>
+		    <option value="20">8:00 pm</option>
+		    <option value="21">9:00 pm</option>
+		    <option value="22">10:00 pm</option>
+		    <option value="23">11:00 pm</option>
+		    <option value="24">12:00 am</option>
+		  </select>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <textarea class="mdl-textfield__input" rows="3" id="update-post-message"></textarea>
+                  <label class="mdl-textfield__label" for="update-post-message">Optional comment</label>
+                </div>
+                <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+                  Please update my planned departure time
+                </button>
+              </form>
+            </div>
+        </div>
+      </div>
+    </section>
+
+
+
+ <!-- Display the message with the udpate time form. -->
+ <section class="mdl-grid content" id="spot-confirm-page" style="display:none">
+   <div class="mdl-cell mdl-cell--12-col mdl-grid">
+
+          <!-- Card containing the inputs to add a new messages -->
+          <div class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet
+                  mdl-cell--6-col-desktop">
+            <div class="mdl-card__title mdl-color--light-blue-600 mdl-color-text--white">
+              <h2 id="heading" class="mdl-card__title-text">Username </h2>
+            </div>
+	    
+              <div id="inner-message" class="mdl-card__supporting-text mdl-color-text--grey-600"></div>
+	    
+	  
+              <p>
+              <form id="leaving-form" action="#">
+	  <!--form to leave here -->
+	  <div class="mdl-card__supporting-text mdl-color-text--grey-600">
+	    <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+                I'm leaving. Free my spot.
+            </button>
+	  </div>
+	      </form>
+	    </p>
+
+	    <p>
+              <form id="update-time-form" action="#">
+	  <!--form to update here -->
+	  <div class="mdl-card__supporting-text mdl-color-text--grey-600">
+	    <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+            Update when I'm leaving.
+            </button>
+	  </div>
+	      </form>      
+	    </p>
+
+
+            <p>
+              <form id="problem-form" action="#">
+	  <!--form to leave here -->
+	  <div class="mdl-card__supporting-text mdl-color-text--grey-600">
+	    <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+              Please assign me a different spot.
+            </button>
+	  </div>
+	      </form>
+	    </p>
+	  </div>
+   </div>
+ </section>
+
+
+ <!-- Display the contact information. -->
+ <section class="mdl-grid content" id="display-contact-info" style="display:none">
+   <div class="mdl-cell mdl-cell--12-col mdl-grid">
+     <!-- Card containing the inputs to add a new messages -->
+     <div class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet
+                  mdl-cell--6-col-desktop">
+       <div class="mdl-card__title mdl-color--light-blue-600 mdl-color-text--white">
+         <h2 id="username" class="mdl-card__title-text">Username </h2>
+       </div>
+       <p>
+         <div id="email" class="mdl-card__supporting-text mdl-color-text--grey-600"></div>
+       </p>
+       <p>
+         <div id="profile_picture" class="mdl-card__supporting-text mdl-color-text--grey-600"></div>
+       </p>
+  
+     </div>  
+   </div>
+</section>
+
+
+
+
+
+
+   <section class="mdl-grid content" id="get-contact-info" style="display:none">
+      <div class="mdl-cell mdl-cell--12-col mdl-grid">
+
+          <!-- Shows who parked in a certain spot -->
+          <div class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet
+                  mdl-cell--6-col-desktop">
+            <div class="mdl-card__title mdl-color--light-blue-600 mdl-color-text--white">
+              <h2 class="mdl-card__title-text">What spot number do you want contact info for?</h2>
+            </div>
+            <div class="mdl-card__supporting-text mdl-color-text--grey-600">
+              <form id="contact-form" action="#">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+               </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <textarea class="mdl-textfield__input" rows="3" id="contact-spot-number"></textarea>
+                  <label class="mdl-textfield__label" for="contact-spot-number">Spot number</label>
+                </div>
+                <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+                  Show me who is in this spot.
+                </button>
+              </form>
+            </div>
+        </div>
+      </div>
+    </section>
+
+
+
+
+    <!-- Show the add post form 
+    <section class="mdl-grid content" id="add-post" style="display:none">
+      <div class="mdl-cell mdl-cell--12-col mdl-grid">
+
+          <!-- Card containing the inputs to add a new messages
+          <div class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet
+                  mdl-cell--6-col-desktop">
+            <div class="mdl-card__title mdl-color--light-blue-600 mdl-color-text--white">
+              <h2 class="mdl-card__title-text">New Post</h2>
+            </div>
+            <div class="mdl-card__supporting-text mdl-color-text--grey-600">
+              <form id="message-form" action="#">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="new-post-title">
+                  <label class="mdl-textfield__label" for="new-post-title">Post title...</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <textarea class="mdl-textfield__input" rows="3" id="new-post-message"></textarea>
+                  <label class="mdl-textfield__label" for="new-post-message">Post message...</label>
+                </div>
+                <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+                  Add post
+                </button>
+              </form>
+            </div>
+        </div>
+      </div>
+    </section>
+    In case I need to add this back. -->
+
+
+    <!-- Show a list of recent posts -->
+    <section class="mdl-grid content" id="recent-posts-list" style="display:none">
+      <div class="posts-container mdl-cell mdl-cell--12-col mdl-grid">
+      </div>
+    </section>
+
+    <!-- Show the list of user's posts -->
+    <section class="mdl-grid content" id="user-posts-list" style="display:none">
+      <div class="posts-container mdl-cell mdl-cell--12-col mdl-grid">
+      </div>
+    </section>
+
+    <!-- Show the list of the spot numbers -->
+    <section class="mdl-grid content" id="spot-list" style="display:none">
+      <div class="posts-container mdl-cell mdl-cell--12-col mdl-grid">
+      </div>
+    </section>
+
+
+
+    <!-- Show the list of top user's posts--> 
+    <section class="mdl-grid content" id="top-user-posts-list" style="display:none">
+      <div class="posts-container mdl-cell mdl-cell--12-col mdl-grid">
+      </div>
+    </section>
+  
+  </main>
+</div>
+
+<script src="scripts/main.js"></script>
+<script> showPark(); </script>
+</body>
+</html>
