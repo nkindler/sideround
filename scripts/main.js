@@ -22,12 +22,14 @@ var messageForm = document.getElementById('message-form');
 var leavingForm = document.getElementById('leaving-form');
 var contactForm = document.getElementById('contact-form');
 var problemForm = document.getElementById('problem-form');
+var adminForm = document.getElementById('admin-form');
 var updateForm = document.getElementById('update-form');
 var messageInput = document.getElementById('new-post-message');
 var updateInput = document.getElementById('update-post-message');
 var contactInfo = document.getElementById('display-contact-info');
 var contactInput = document.getElementById('contact-spot-number');
 
+var adminMenu = document.getElementById('menu-admin');
 var titleInput = document.getElementById('new-post-title');
 var updateInput = document.getElementById('update-post-title');
 var signInButton = document.getElementById('sign-in-button');
@@ -37,8 +39,11 @@ var addPost = document.getElementById('add-post');
 var updatePost = document.getElementById('update-post');
 var addButton = document.getElementById('add');
 var contactButton = document.getElementById('get-contact-info');
+var adminButton = document.getElementById('get-admin-info');
 var addWhenSpotFull = document.getElementById('add-when-spot-full');
 var updateTimeButton = document.getElementById('update-time-form');
+
+var adminForm = document.getElementById('admin-form');
 
 
 var recentPostsSection = document.getElementById('recent-posts-list');
@@ -56,6 +61,7 @@ var userSpotsButton = document.getElementById('menu-my-spots');
 var mySpotsList = document.getElementById('spot-list');
 var updateTimeForm = document.getElementById('spot-confirm-form');
 var spotConfirmPage = document.getElementById('spot-confirm-page');
+
 
 /**
  * Saves a new parking session to the Firebase DB.
@@ -542,6 +548,30 @@ window.addEventListener('load', function() {
   //    showSection(contactButton);
         showPark();
   };
+
+
+  // Show the admin form.
+  adminMenu.onclick = function(g) {
+      g.preventDefault();
+
+      showSection(adminButton);
+
+  };
+    
+  adminForm.onclick = function(r) {
+      r.preventDefault();
+      
+      //clear the spaces.
+      clearAllSpots(true);
+      
+      //turn off the admin message
+      adminButton.style.display = 'none';
+
+      //update contact display
+      updateSimpleMessage('All spots cleared', 'You have checked out everyone!');
+  };
+
+
   myPostsMenuButton.onclick = function() {
     //showSection(userPostsSection, myPostsMenuButton);
     //show the contact form
@@ -561,11 +591,27 @@ window.addEventListener('load', function() {
 }, false);
 
 
+function showAdmin() {
+
+    var query = firebase.database().ref('admins').orderByKey();  //Get all the spots that exist.
+    query.once('value').then(function(snapshot) {
+	snapshot.forEach(function(childSnapshot) {
+	    var key = childSnapshot.key;
+	    var uid = firebase.auth().currentUser.uid;
+	    if (key == uid) {//need to make this check for an admin
+		    // We have an admin.  Show the admin menu
+		adminMenu.style.display='block';
+	    }
+	});
+    });
+}
+
 
 function showPark(confirmation) {
     var allSpotsFull = false;
     var openSpot = false;
     var userSpotNumber;
+    var uid;
     var alreadyParked = false;
       var query = firebase.database().ref('spots').orderByKey();  //Get all the spots that exist.
       query.once('value').then(function(spotsList) {
@@ -573,7 +619,9 @@ function showPark(confirmation) {
 	var childSpotNumber;
 	var childIsOccupied;
 	var childDatauid;
-	var uid = firebase.auth().currentUser.uid;
+	uid = firebase.auth().currentUser.uid;
+	//showAdmin(uid);
+
 	var spotData = spot.val();
 	childDatauid = spotData.uid;
         if (childDatauid && uid == childDatauid){
@@ -610,9 +658,15 @@ function showPark(confirmation) {
 	messageInput.value = '';
 	titleInput.value = '';
     }
-
+	  
    });
-  }
+  
+
+   showAdmin();
+    
+}
+
+
 
 
 function updateContactDisplay(email, profile_picture, username, warning, about){
@@ -769,10 +823,10 @@ function getNewSpot(callback) {
 }
 
 
-function clearAllSpots(){
+function clearAllSpots(scheduled){
     //var day =new Date().getDay();
     var hours =new Date().getHours();
-    if (hours > 0 && hours < 2)  {  // At 1am++something, all slots are cleared.
+    if (scheduled || (hours > 0 && hours < 2))  {  // At 1am++something, all slots are cleared.
                                          
 	//What you want to do daily goes here
 	var theSpots = firebase.database().ref('spots').orderByKey();  
