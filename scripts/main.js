@@ -23,11 +23,14 @@ var leavingForm = document.getElementById('leaving-form');
 var contactForm = document.getElementById('contact-form');
 var problemForm = document.getElementById('problem-form');
 var adminForm = document.getElementById('admin-form');
+var adminFormOneSpot = document.getElementById('admin-form-one-spot');
+
 var updateForm = document.getElementById('update-form');
 var messageInput = document.getElementById('new-post-message');
 var updateInput = document.getElementById('update-post-message');
 var contactInfo = document.getElementById('display-contact-info');
 var contactInput = document.getElementById('contact-spot-number');
+var adminSpotInput = document.getElementById('admin-spot-number');
 
 var adminMenu = document.getElementById('menu-admin');
 var titleInput = document.getElementById('new-post-title');
@@ -328,12 +331,17 @@ function getUserInfo() {
 }
 
 
-function checkOutCurrentUser() {  
-  var returnThing;
-  var sessionsRef = firebase.database().ref('sessions').orderByKey();
+function checkOutCurrentUser(userToCheckOut) {  
+    var returnThing;
+    var userId;
+    var sessionsRef = firebase.database().ref('sessions').orderByKey();
     sessionsRef.once('value').then(function(eachsession) {
 	eachsession.forEach(function(theSession){
-	    var userId = firebase.auth().currentUser.uid;
+	    if (!userToCheckOut) {
+		userId = firebase.auth().currentUser.uid;
+	    } else {
+		userId = userToCheckOut;
+	    }
 	    if(theSession.val().uid == userId && !theSession.val().sessionEnd) {
 		//Update the field so dateend = now.
 		var parkingSessionData = {
@@ -401,7 +409,8 @@ function showSection(sectionElement, buttonElement) {
   contactInfo.style.display='none'; 
   updatePost.style.display = 'none'; 
   spotConfirmPage.style.display = 'none';
- 
+  adminButton.style.display = 'none';
+
   //addPostWhenSpotFull
  
   recentMenuButton.classList.remove('is-active');
@@ -501,6 +510,42 @@ window.addEventListener('load', function() {
 	//});
     };
 
+
+    adminFormOneSpot.onsubmit = function(t) {
+	
+	t.preventDefault();
+	var spotToCheckOut = 1000 + Number(adminSpotInput.value);
+	// console.log(spotToCheckOut);
+	var userInSpot = firebase.database().ref('spots/' + spotToCheckOut);
+	userInSpot.once('value').then(function(theSpot) {
+	    if (theSpot.val()) {
+		var userId = theSpot.val().uid;
+		if (userId) {
+		    // check out the user
+		    checkOutCurrentUser(userId);
+		    //var userId = firebase.auth().currentUser.uid;
+		    //var userData = firebase.database().ref('users/' + userId);
+		    //userData.once('value').then(function(userData) {
+		//	updateContactDisplay(userData.val().email, userData.val().profile_picture, userData.val().username, "", "");
+		    updateSimpleMessage('Check-out successful', 'Spot #' + Number(adminSpotInput.value) + ' checked out successfully.'); 
+		    return;
+
+		//});
+	
+		} else {
+		    updateContactDisplay("", "", "", "Spot is empty", "");
+		    return;
+		}
+		
+	    }else { 
+		updateContactDisplay("", "", "", "Spot number does not exist.", "");
+		return;
+	    }
+	});
+
+	//let the user know that he was checked out successfully.
+    };
+
   //Here's where someone asks for a user in a certain spot
     contactForm.onsubmit = function(g) {
 	g.preventDefault();
@@ -528,7 +573,7 @@ window.addEventListener('load', function() {
 
       }
   }) ;
- }
+ };
 
 
     //showPark();
